@@ -1,0 +1,18 @@
+Name: "server"
+Type: "server"
+SecretKey: "+]W{hqiAYoC?p`"
+ServerSettings:
+  ServerPort: 8080
+ClientSettings:
+  ServerUrl: "http://localhost:8080"
+PortForwards:
+  - Name: "nginx"
+    LocalPort: 1234
+    ForwardTo: "socketClientName"
+    RemoteHost: "localhost"
+    RemotePort: 80
+  - Name: "SD"
+    LocalPort: 3000
+    ForwardTo: "socketClientName"
+    RemoteHost: "192.168.1.100"
+    RemotePort: 7860
