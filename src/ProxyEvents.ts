@@ -41,6 +41,10 @@ export function ProxyEvents(socket: Socket) {
                 activeConnections.splice(index, 1);
             }
         });
+
+        client.on('error', (e:Error) => {
+            console.error(e);
+        })
     });
 
 
