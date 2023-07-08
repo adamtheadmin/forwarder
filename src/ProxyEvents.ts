@@ -3,12 +3,12 @@ import configParser from "./configParser";
 import {PortForward} from "../@types/Config";
 import * as net from 'net';
 import { v4 as uuidv4 } from 'uuid';
-import {Server} from "../@types/state/Server";
 import {ActiveConnection} from "../@types/state/ActiveConnection";
 
 const config = configParser();
 const activeConnections: ActiveConnection[] = [];
 const servers: {sessionId: string; socket: net.Socket}[] = [];
+import {store} from "../store";
 
 export function ProxyEvents(socket: Socket) {
 
@@ -83,11 +83,19 @@ export function handleIncomingConnections(io: any) {
     for (const port of PortForwards) {
         const server = net.createServer((socket) => {
             const sessionId = uuidv4();
+            const {gateways} = store.getState();
+            const gateway = gateways.find((g) => g.name === port?.Name);
+            if (!gateway) {
+                console.error("Could not find gateway to make connection, ending socket.");
+                socket.end();
+                return;
+            }
             servers.push({
                 sessionId,
                 socket
             });
-            io.emit('createConnection', {
+            const authenticatedClient = io.sockets.sockets.get(gateway?.socketId);
+            authenticatedClient.emit('createConnection', {
                 sessionId,
                 remotePort: port.RemotePort,
                 remoteHost: port.RemoteHost,
@@ -95,15 +103,14 @@ export function handleIncomingConnections(io: any) {
                 forwardTo: port.ForwardTo
             });
             socket.on('data', (data) => {
-                io.emit('sendPacket', { sessionId, data});
+                authenticatedClient.emit('sendPacket', { sessionId, data});
             });
 
             socket.on('end', () => {
-                io.emit('endConnection', { sessionId });
+                authenticatedClient.emit('endConnection', { sessionId });
             });
         });
 
-        server.listen(port.LocalPort, () => {
-        });
+        server.listen(port.LocalPort);
     }
 }
