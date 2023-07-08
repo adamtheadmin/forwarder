@@ -84,7 +84,7 @@ export function handleIncomingConnections(io: any) {
         const server = net.createServer((socket) => {
             const sessionId = uuidv4();
             const {gateways} = store.getState();
-            const gateway = gateways.find((g) => g.name === port?.Name);
+            const gateway = gateways.find((g) => g.name === port?.ForwardTo);
             if (!gateway) {
                 console.error("Could not find gateway to make connection, ending socket.");
                 socket.end();
@@ -95,6 +95,11 @@ export function handleIncomingConnections(io: any) {
                 socket
             });
             const authenticatedClient = io.sockets.sockets.get(gateway?.socketId);
+            if (!authenticatedClient) {
+                console.error("Client Disconnected");
+                socket.end();
+                return;
+            }
             authenticatedClient.emit('createConnection', {
                 sessionId,
                 remotePort: port.RemotePort,

@@ -9,7 +9,7 @@ export const gatewaySlice = createSlice({
     initialState,
     reducers: {
         connect: (state, action: any) => {
-            state.push(action);
+            state.push(action.payload);
         },
         disconnect: (state, action: any) => {
             const index = state.findIndex((gateway: Gateway) => gateway.socketId === action.socketId);
