@@ -12,7 +12,7 @@ export const gatewaySlice = createSlice({
             state.push(action.payload);
         },
         disconnect: (state, action: any) => {
-            const index = state.findIndex((gateway: Gateway) => gateway.socketId === action.socketId);
+            const index = state.findIndex((gateway: Gateway) => gateway.socketId === action?.payload?.socketId);
             if (index !== -1) {
                 state.splice(index, 1);
             }

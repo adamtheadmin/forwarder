@@ -24,11 +24,19 @@ export default function CreateServer() {
                 name: data.name,
                 socketId: socket.id
             }));
+
+            const gateways = store.getState().gateways;
         });
 
         socket.on("disconnect", () => {
+            console.log("socket disconnected");
             // @ts-ignore
             store.dispatch(disconnect({socketId: socket.id}));
+            const gateways = store.getState().gateways;
+        });
+
+        socket.on('error', (err) => {
+            console.error('Socket IO Error:', err);
         });
 
         ProxyEvents(socket);
@@ -37,5 +45,4 @@ export default function CreateServer() {
     handleIncomingConnections(io);
 
     httpServer.listen(config.ServerSettings?.ServerPort);
-    console.log(`Socket.io server listening on port ${+config.ServerSettings?.ServerPort}`);
 }

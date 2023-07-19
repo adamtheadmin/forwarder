@@ -7,12 +7,17 @@ import {ActiveConnection} from "../@types/state/ActiveConnection";
 
 const config = configParser();
 const activeConnections: ActiveConnection[] = [];
-const servers: {sessionId: string; socket: net.Socket}[] = [];
+const serverSockets: {sessionId: string; socket: net.Socket}[] = [];
 import {store} from "../store";
+
+process.on('uncaughtException', (err) => {
+    console.error(err);
+});
 
 export function ProxyEvents(socket: Socket) {
 
     socket.on('createConnection', (data) => {
+        console.log('createConnection', data);
         if (data?.forwardTo !== config.Name) {
             return;
         }
@@ -47,9 +52,8 @@ export function ProxyEvents(socket: Socket) {
         })
     });
 
-
     socket.on('sendPacket', (data) => {
-        const connection = activeConnections.find((connection: ActiveConnection) => connection.sessionId === data.sessionId);
+        const connection = activeConnections.find((connection) => connection.sessionId === data.sessionId);
         if (connection) {
             connection.client.write(data.data);
         }
@@ -63,19 +67,23 @@ export function ProxyEvents(socket: Socket) {
         }
     });
 
+
     socket.on('response', ({ sessionId, data }) => {
-        const server = servers.find((server) => server.sessionId === sessionId);
+        const server = serverSockets.find((server) => server.sessionId === sessionId);
         if (server) {
             server.socket.write(data);
         }
     });
 
     socket.on('endResponse', ({ sessionId }) => {
-        const server = servers.find((server) => server.sessionId === sessionId);
+        const server = serverSockets.find((server) => server.sessionId === sessionId);
         if (server) {
             server.socket.end();
+            const index = serverSockets.indexOf(server);
+            serverSockets.splice(index, 1);
         }
     });
+
 }
 
 export function handleIncomingConnections(io: any) {
@@ -90,7 +98,7 @@ export function handleIncomingConnections(io: any) {
                 socket.end();
                 return;
             }
-            servers.push({
+            serverSockets.push({
                 sessionId,
                 socket
             });
