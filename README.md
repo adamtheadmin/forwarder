@@ -24,18 +24,12 @@ Navigate into the cloned repository:
 cd forwarder
 ```
 
-Then, install the dependencies using either npm or yarn:
+Then, install the dependencies with npm
 
 With npm:
 
 ```
 npm install
-```
-
-With yarn:
-
-```
-yarn install
 ```
 
 The project is written in TypeScript, You can run type checking by using this command
@@ -62,7 +56,24 @@ Before running the application, ensure to modify the configuration file to speci
 
 ## Configuration
 
-The application's behavior can be configured by modifying the settings in the `config.yml` file. This includes settings for the PortForwards such as `LocalPort`, `RemotePort`, `ForwardTo`, and `Name`.
+At least 2 instances of this application need to be running simultaneously in order for port forwarding to work properly. 
+You will need a server instance, and at least 1 client instances. You can set this up in the config.yml file.
+
+```
+Name: "CloudHostingDroplet"             <--- Instance Name, used to route traffic through socket.io
+Type: "server"                          <--- Instance Type, either 'client' or 'server'
+SecretKey: "+]W{hqiAYoC?p`"             <--- A secret key, must match on both client and server. This is needed for security
+ServerSettings:
+    ServerPort: 8080                    <--- The port that socket.io will listen on (server only)
+ClientSettings:
+    ServerUrl: "http://localhost:8080"  <--- The port that socket.io will connect to (client only)
+PortForwards:                           <--- This section defines which ports will be forwarded
+- Name: "ssh"                           <--- Just a name for the port forward
+  LocalPort: 3001                       <--- Defines which local port to listen to 
+  ForwardTo: "macmini"                  <--- Defines which socket.io client should receive this traffic (matches name in config)
+  RemoteHost: "192.168.1.14"            <--- Defines which host the request should go when it reaches the client
+  RemotePort: 22                        <--- Defines which port the request should go when it reaches the client
+```
 
 ## Contributions
 
