@@ -9,6 +9,24 @@ const config = configParser();
 const activeConnections: ActiveConnection[] = [];
 const serverSockets: {sessionId: string; socket: net.Socket}[] = [];
 import {store} from "../store";
+import moment from "moment";
+
+//cleanup of old connections
+setInterval(() => {
+    let cleared: number = 0;
+    for (const connection of activeConnections) {
+        const lastSeen = connection.lastPacketSentAt || connection.createdAt;
+        if (lastSeen.isBefore(moment().subtract(1, 'minute'))) {
+            const index = activeConnections.indexOf(connection);
+            if (index !== -1) {
+                activeConnections.splice(index, 1);
+            }
+            connection.client.destroy();
+            cleared++;
+        }
+    }
+    console.log(`Cleared ${cleared} old connections`)
+}, (1000 * 60));
 
 process.on('uncaughtException', (err) => {
     console.error(err);
@@ -24,13 +42,18 @@ export function ProxyEvents(socket: Socket) {
 
         const client = new net.Socket();
         client.connect(data.remotePort, data.remoteHost);
-        activeConnections.push({
+        const connection = {
             client,
             sessionId: data.sessionId,
-            name: data.name
-        });
+            name: data.name,
+            createdAt: moment(),
+            lastPacketSentAt: null
+        };
+        activeConnections.push(connection);
 
         client.on('data', (clientData) => {
+            // @ts-ignore
+            connection.lastPacketSentAt = moment();
             socket.emit('response', {
                 sessionId: data.sessionId,
                 data: clientData

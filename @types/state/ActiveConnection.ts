@@ -1,10 +1,12 @@
-import * as buffer from "buffer";
 import {Socket} from "socket.io";
+import {Moment} from "moment";
 
 export interface ActiveConnection {
     client: any;
     name: string;
     sessionId: string;
+    createdAt: Moment;
+    lastPacketSentAt: Moment|null;
 }
 
 export interface CreateConnectionData {
