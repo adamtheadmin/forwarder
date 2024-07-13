@@ -10,7 +10,13 @@ export default function CreateServer() {
     const config = configParser();
 
     const httpServer = createServer();
-    const io = new Server(httpServer, {});
+    const io = new Server(httpServer, {
+        maxHttpBufferSize: 1e8,
+        pingTimeout: 60000,
+        cors: {
+            origin: "*",
+        }
+    });
 
     io.on("connection", (socket: Socket) => {
         socket.on('register', async (data: any) => {
