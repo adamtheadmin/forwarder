@@ -6,7 +6,7 @@ export default function CreateClient() {
     const config = configParser();
     console.log(`Client Starting... Connecting to host at ${config?.ClientSettings?.ServerUrl}`);
     const socket = io(config?.ClientSettings?.ServerUrl, {
-        transports: ['websocket']
+        transports: ['websocket', 'polling']
     });
 
     socket.on("connect", async ():Promise<void> => {
